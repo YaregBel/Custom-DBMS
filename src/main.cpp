@@ -79,6 +79,64 @@ void read_input(InputBuffer* input_buffer)
     input_buffer->set_input_length(input_bytes);
 }
 
+typedef enum {
+    META_COMMAND_SUCCESS,
+    META_COMMAND_UNRECOGNIZED_COMMAND
+} MetaCommandResult;
+
+typedef enum { 
+    PREPARE_SUCCESS, 
+    PREPARE_UNRECOGNIZED_STATEMENT 
+} PrepareResult;
+
+MetaCommandResult do_meta_command(InputBuffer* input_buffer) {
+  if (strcmp(input_buffer->get_buffer(), ".exit") == 0) {
+    exit(EXIT_SUCCESS);
+  } else {
+    return META_COMMAND_UNRECOGNIZED_COMMAND;
+  }
+}
+
+typedef enum { 
+    STATEMENT_INSERT, 
+    STATEMENT_SELECT 
+} StatementType;
+
+
+class Statement
+{
+public:
+    // TODO: place to private
+    StatementType type;
+private:
+};
+
+PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement) {
+    if (strncmp(input_buffer->get_buffer(), "insert", 6) == 0) {
+        statement->type = STATEMENT_INSERT;
+        return PREPARE_SUCCESS;
+    }
+    if (strcmp(input_buffer->get_buffer(), "select") == 0) {
+        statement->type = STATEMENT_SELECT;
+        return PREPARE_SUCCESS;
+    }
+
+    return PREPARE_UNRECOGNIZED_STATEMENT;
+}
+
+void execute_statement(Statement* statement)
+{
+    switch (statement->type)
+    {
+        case(STATEMENT_INSERT):
+            std::cout << "Insert statement has been detected.\n";
+            break;
+        case(STATEMENT_SELECT):
+            std::cout << "Select statement has been detected.\n";
+            break;
+    }
+}
+
 int main(int argc, char* argv[])
 {
     InputBuffer* input_buffer = new InputBuffer();
@@ -87,12 +145,29 @@ int main(int argc, char* argv[])
         print_promt();
         read_input(input_buffer);
 
-        if (strcmp(input_buffer->get_buffer(), ".exit") == 0)
+        if (input_buffer->get_buffer()[0] == '.')
         {
-            exit(EXIT_SUCCESS);
+            switch(do_meta_command(input_buffer))
+            {
+                case (META_COMMAND_SUCCESS):    
+                        continue;
+                case (META_COMMAND_UNRECOGNIZED_COMMAND):
+                    std::cout << "Unrecognized command " << input_buffer->get_buffer() << std::endl;
+                    continue;
+            }
         }
-        else {
-            std::cout << "Unrecognized command " << input_buffer->get_buffer() << "\n";
+
+        Statement statement;
+        switch (prepare_statement(input_buffer, &statement)) 
+        {
+            case (PREPARE_SUCCESS):
+                break;
+            case (PREPARE_UNRECOGNIZED_STATEMENT):
+                std::cout << "Unrecognized keyword at start of " << input_buffer->get_buffer() << std::endl;
+                continue;
         }
+
+        execute_statement(&statement);
+        std::cout << "Executed." << std::endl;
     }
 }
