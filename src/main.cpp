@@ -1,8 +1,11 @@
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <array>
+#include <sys/types.h>
 
 class InputBuffer
 {
@@ -97,6 +100,56 @@ MetaCommandResult do_meta_command(InputBuffer* input_buffer) {
   }
 }
 
+constexpr uint32_t COLUMN_USERNAME_SIZE = 32;
+constexpr uint32_t COLUMN_EMAIL_SIZE = 256;
+
+struct Row
+{
+    uint32_t id;
+    std::array<char, COLUMN_USERNAME_SIZE> username;
+    std::array<char, COLUMN_EMAIL_SIZE> email;
+};
+
+#define size_of_attribute(Struct, Attribute) sizeof(((Struct*)0)->Attribute);
+
+constexpr uint32_t id_size = size_of_attribute(Row, id);
+constexpr uint32_t username_size = size_of_attribute(Row, username);
+constexpr uint32_t email_size = size_of_attribute(Row, email);
+constexpr uint32_t id_offset = 0;
+constexpr uint32_t username_offset = id_offset + id_size;
+constexpr uint32_t email_offset = username_offset + username_size;
+constexpr uint32_t row_size = username_size + email_size + id_size;
+
+void serialize_row(const Row* source, std::byte* destination)
+{
+    // if (destination < row_size)
+    // {
+    //     throw std::runtime_error("Buffer too small for serialization");
+    // }
+
+    memcpy(destination + id_offset, &(source->id), id_size);
+    memcpy(destination + username_offset, &(source->username), username_size);
+    memcpy(destination + email_offset, &(source->email), email_size);
+}
+
+void deserialize_row(const std::byte* source, Row* destination)
+{
+    memcpy(&(destination->id), source + id_offset, id_size);
+    memcpy(&(destination->username), source + username_offset, username_size);
+    memcpy(&(destination->email), source + email_offset, email_size);
+}
+
+const uint32_t page_size = 4096;
+constexpr uint32_t table_max_pages = 100;
+const uint32_t rows_per_page = page_size / row_size;
+const uint32_t table_max_rows = rows_per_page * table_max_pages;
+
+struct Table {
+public:
+    uint32_t num_rows;
+    std::byte* pages[table_max_pages];
+};
+
 typedef enum { 
     STATEMENT_INSERT, 
     STATEMENT_SELECT 
@@ -108,12 +161,21 @@ class Statement
 public:
     // TODO: place to private
     StatementType type;
+    Row row_to_insert;
 private:
 };
 
 PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement) {
     if (strncmp(input_buffer->get_buffer(), "insert", 6) == 0) {
         statement->type = STATEMENT_INSERT;
+        int args_assigned = scanf(input_buffer->get_buffer(), 
+            "insert %d %s %s", &(statement->row_to_insert.id), 
+            statement->row_to_insert.username, statement->row_to_insert.email);
+        if (args_assigned < 3)
+        {
+            std::cout << "Error: less than 3 arguments\n";
+            return PREPARE_SYNTAX_ERROR;
+        }
         return PREPARE_SUCCESS;
     }
     if (strcmp(input_buffer->get_buffer(), "select") == 0) {
@@ -134,7 +196,7 @@ void execute_statement(Statement* statement)
         case(STATEMENT_SELECT):
             std::cout << "Select statement has been detected.\n";
             break;
-    }
+    }  
 }
 
 int main(int argc, char* argv[])
