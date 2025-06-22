@@ -47,10 +47,41 @@ public:
         memcpy(&(destination->username), source + username_offset, username_size);
         memcpy(&(destination->email), source + email_offset, email_size);
     }
+
+    static void print_row(Row* row)
+    {
+        std::cout << "(" << row->id << ", " << row->username.data() << ", " << 
+            row->email.data() << std::endl;
+    }
+
+    // template <size_t N>
+    // static void print_arr(const std::array<char, N>& arr) {
+    //     for (char c : arr) {
+    //         if (c == '\0') break;
+    //         std::cout << c;
+    //     }
+    // }
 };
 
-struct Table {
+class Table {
 public:
+    Table(const uint32_t table_pages = table_max_pages)
+    {
+        this->num_rows = 0;
+        for (int i = 0; i < table_pages; i++)
+        {
+            this->pages[i] = NULL;
+        }
+    }
+    ~Table()
+    {
+        for (int i = 0; this->pages[i]; i++)
+        {
+            delete(this->pages[i]);
+        }
+        delete(this);
+    }
+
     uint32_t num_rows;
     std::byte* pages[table_max_pages];
 };

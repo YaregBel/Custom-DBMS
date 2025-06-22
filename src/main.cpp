@@ -1,3 +1,6 @@
+#include <chrono>
+#include <thread>
+
 #include "statement.h"
 
 void print_promt()
@@ -7,7 +10,10 @@ void print_promt()
 
 int main(int argc, char* argv[])
 {
+    Table* table = new Table();
     InputBuffer* input_buffer = new InputBuffer();
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     while (true)
     {
         print_promt();
@@ -15,7 +21,7 @@ int main(int argc, char* argv[])
 
         if (input_buffer->get_buffer()[0] == '.')
         {
-            switch(do_meta_command(input_buffer))
+            switch(StatementManipulator::do_meta_command(input_buffer))
             {
                 case (META_COMMAND_SUCCESS):    
                     continue;
@@ -34,10 +40,22 @@ int main(int argc, char* argv[])
                 std::cout << "Unrecognized keyword at start of " << input_buffer->get_buffer() << "\n";
                 continue;
             case(PREPARE_SYNTAX_ERROR):
-                std::cout << "Syntax error!\n";
+                std::cout << "Syntax error! Couldn't parse statement.\n";
+                continue;
         }
 
-        StatementManipulator::execute_statement(&statement);
-        std::cout << "Executed." << std::endl;
+        //StatementManipulator::execute_statement(&statement, table);
+        switch(StatementManipulator::execute_statement(&statement, table))
+        {
+            case (EXECUTE_SUCCESS):
+                std::cout << "Executed.\n";
+                break;
+            case (EXECUTE_TABLE_FULL):
+                std::cout << "Error: Table full.\n";
+                break;
+        }
     }
+
+    delete(table);
+    delete(input_buffer);
 }
