@@ -53,6 +53,9 @@ int main(int argc, char* argv[])
             case (EXECUTE_TABLE_FULL):
                 std::cout << "Error: Table full.\n";
                 break;
+            case (EXECUTE_ERROR):
+                std::cout << "Execute error!\n";
+                break;
         }
     }
 
