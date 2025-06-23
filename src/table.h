@@ -51,7 +51,7 @@ public:
     static void print_row(Row* row)
     {
         std::cout << "(" << row->id << ", " << row->username.data() << ", " << 
-            row->email.data() << std::endl;
+            row->email.data() << ")" << std::endl;
     }
 
     // template <size_t N>

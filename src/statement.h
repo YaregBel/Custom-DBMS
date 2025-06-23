@@ -50,9 +50,10 @@ public:
     {
         if (strncmp(input_buffer->get_buffer(), "insert", 6) == 0) {
             std::cout << "Debug: Input buffer = '" << input_buffer->get_buffer() << "'\n";
+            
             int args_assigned = sscanf(input_buffer->get_buffer(), 
                 "insert %d %31s %255s", &(statement->row_to_insert.id), 
-                statement->row_to_insert.username, statement->row_to_insert.email);
+                &statement->row_to_insert.username[0], &statement->row_to_insert.email[0]);
             statement->type = STATEMENT_INSERT;
 
             if (args_assigned < 3)
