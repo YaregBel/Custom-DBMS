@@ -12,12 +12,18 @@ TEST_CASE( "vectors can be sized and resized", "[vector]" ) {
     Table* table = new Table();
     InputBuffer* input_buffer = new InputBuffer();
 
-    SECTION( "Statement .exit must processed correctly" ) {
-        input_buffer->set_buffer(".exit");
+    SECTION( "Statement .exit must processed correctly" ) 
+    {
+        std::vector<std::string> exitCom = {".exit"};
 
-        REQUIRE(input_buffer->get_buffer() == ".exit");
+        input_buffer->set_buffer(exitCom);
 
-        //REQUIRE( StatementManipulator::do_meta_command(input_buffer) == META_COMMAND_SUCCESS );
+        REQUIRE(input_buffer->buffer() == exitCom);
+        
+        MetaCommandResult meta_command_result = StatementManipulator::do_meta_command(input_buffer);
+        REQUIRE( meta_command_result != META_COMMAND_UNRECOGNIZED_COMMAND);
+
+        std::cout << "Проверка выражений прошла!" << std::endl;
     }
 
     // SECTION("First row") {

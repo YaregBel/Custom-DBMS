@@ -16,8 +16,8 @@ constexpr uint32_t table_max_pages = 100;
 struct Row
 {
     uint32_t id;
-    std::array<char, COLUMN_USERNAME_SIZE> username;
-    std::array<char, COLUMN_EMAIL_SIZE> email;
+    std::string username;
+    std::string email;
 };
 
 #define size_of_attribute(Struct, Attribute) sizeof(((Struct*)0)->Attribute);

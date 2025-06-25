@@ -39,7 +39,7 @@ class StatementManipulator
 public:
     static MetaCommandResult do_meta_command(InputBuffer* input_buffer) 
     {
-        if (strcmp(input_buffer->get_buffer(), ".exit") == 0) {
+        if (input_buffer->buffer()[0] == ".exit") {
             exit(EXIT_SUCCESS);
         } else {
             return META_COMMAND_UNRECOGNIZED_COMMAND;
@@ -48,22 +48,26 @@ public:
 
     static PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement) 
     {
-        if (strncmp(input_buffer->get_buffer(), "insert", 6) == 0) {
-            std::cout << "Debug: Input buffer = '" << input_buffer->get_buffer() << "'\n";
+        if (input_buffer->buffer()[0] == "insert") 
+        {    
+            std::cout << "Debug: Input buffer = '" << input_buffer->buffer()[0] << "'\n";
             
-            int args_assigned = sscanf(input_buffer->get_buffer(), 
-                "insert %d %31s %255s", &(statement->row_to_insert.id), 
-                &statement->row_to_insert.username[0], &statement->row_to_insert.email[0]);
-            statement->type = STATEMENT_INSERT;
-
-            if (args_assigned < 3)
+            int args_assigned = input_buffer->size();
+            switch(args_assigned)
             {
-                std::cout << "Error: less than 3 arguments\n";
-                return PREPARE_SYNTAX_ERROR;
+                case(3):
+                    statement->row_to_insert.id = std::stoi(input_buffer->buffer()[1]);
+                    statement->row_to_insert.username = input_buffer->buffer()[2];
+                    statement->row_to_insert.email = input_buffer->buffer()[3];
+
+                    statement->type = STATEMENT_INSERT;
+                    return PREPARE_SUCCESS;
+                default:
+                    std::cout << "Error: you should use 3 arguments\n";
+                    return PREPARE_SYNTAX_ERROR;
             }
-            return PREPARE_SUCCESS;
         }
-        if (strcmp(input_buffer->get_buffer(), "select") == 0) {
+        if (input_buffer->buffer()[0] == "select") {
             statement->type = STATEMENT_SELECT;
             return PREPARE_SUCCESS;
         }

@@ -19,14 +19,14 @@ int main(int argc, char* argv[])
         print_promt();
         InputManipulator::read_input(input_buffer);
 
-        if (input_buffer->get_buffer()[0] == '.')
+        if (input_buffer->buffer()[0][0] == '.')
         {
             switch(StatementManipulator::do_meta_command(input_buffer))
             {
                 case (META_COMMAND_SUCCESS):    
                     continue;
                 case (META_COMMAND_UNRECOGNIZED_COMMAND):
-                    std::cout << "Unrecognized command " << input_buffer->get_buffer() << std::endl;
+                    std::cout << "Unrecognized command " << input_buffer->buffer()[0] << std::endl;
                     continue;
             }
         }
@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
             case (PREPARE_SUCCESS):
                 break;
             case (PREPARE_UNRECOGNIZED_STATEMENT):
-                std::cout << "Unrecognized keyword at start of " << input_buffer->get_buffer() << "\n";
+                std::cout << "Unrecognized keyword: " << input_buffer->buffer()[0] << "\n";
                 continue;
             case(PREPARE_SYNTAX_ERROR):
                 std::cout << "Syntax error! Couldn't parse statement.\n";

@@ -15,3 +15,15 @@ find_package(Catch2 3 REQUIRED)
 
 add_executable(tests src/tests/statements_test.cpp)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR NOT CMAKE_BUILD_TYPE)
+
+    target_compile_options(tests PRIVATE
+        $<$<CONFIG:Debug>:-g3 -O0>    
+    )
+
+    target_link_options(tests PRIVATE
+        $<$<CONFIG:Debug>:-g3>    
+    )
+
+endif()
