@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <iostream>
+#include <stdexcept>
 #include "input_buffer.h"
 #include "table.h"
 
@@ -53,18 +54,29 @@ public:
             std::cout << "Debug: Input buffer = '" << input_buffer->buffer()[0] << "'\n";
             
             int args_assigned = input_buffer->size();
-            switch(args_assigned)
+            
+            if (args_assigned == 4)
             {
-                case(3):
+                try
+                {
                     statement->row_to_insert.id = std::stoi(input_buffer->buffer()[1]);
-                    statement->row_to_insert.username = input_buffer->buffer()[2];
-                    statement->row_to_insert.email = input_buffer->buffer()[3];
-
-                    statement->type = STATEMENT_INSERT;
-                    return PREPARE_SUCCESS;
-                default:
-                    std::cout << "Error: you should use 3 arguments\n";
+                }
+                catch(std::invalid_argument)
+                {
+                    std::cout << "Invalid ID format.\n";
                     return PREPARE_SYNTAX_ERROR;
+                }
+                
+                statement->row_to_insert.username = input_buffer->buffer()[2];
+                statement->row_to_insert.email = input_buffer->buffer()[3];
+
+                statement->type = STATEMENT_INSERT;
+                return PREPARE_SUCCESS;
+            }
+            else 
+            {
+                std::cout << "Error: you should use 3 arguments\n";
+                return PREPARE_SYNTAX_ERROR;
             }
         }
         if (input_buffer->buffer()[0] == "select") {

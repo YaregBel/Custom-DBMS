@@ -16,19 +16,17 @@ constexpr uint32_t table_max_pages = 100;
 struct Row
 {
     uint32_t id;
-    std::string username;
-    std::string email;
+    std::array<char, COLUMN_USERNAME_SIZE> username;
+    std::array<char, COLUMN_EMAIL_SIZE> email;
 };
 
 #define size_of_attribute(Struct, Attribute) sizeof(((Struct*)0)->Attribute);
 
 constexpr uint32_t id_size = size_of_attribute(Row, id);
-constexpr uint32_t username_size = size_of_attribute(Row, username);
-constexpr uint32_t email_size = size_of_attribute(Row, email);
 constexpr uint32_t id_offset = 0;
 constexpr uint32_t username_offset = id_offset + id_size;
-constexpr uint32_t email_offset = username_offset + username_size;
-constexpr uint32_t row_size = username_size + email_size + id_size;
+constexpr uint32_t email_offset = username_offset + COLUMN_USERNAME_SIZE;
+constexpr uint32_t row_size = COLUMN_USERNAME_SIZE + COLUMN_EMAIL_SIZE + id_size;
 constexpr uint32_t rows_per_page = page_size / row_size;
 constexpr uint32_t table_max_rows = rows_per_page * table_max_pages;
 
@@ -38,14 +36,14 @@ public:
     static void serialize_row(const Row* source, std::byte* destination)
     {
         memcpy(destination + id_offset, &(source->id), id_size);
-        memcpy(destination + username_offset, &(source->username), username_size);
-        memcpy(destination + email_offset, &(source->email), email_size);
+        memcpy(destination + username_offset, source->username.data(), COLUMN_USERNAME_SIZE);
+        memcpy(destination + email_offset, source->email.data(), COLUMN_EMAIL_SIZE);
     }
     static void deserialize_row(const std::byte* source, Row* destination)
     {
         memcpy(&(destination->id), source + id_offset, id_size);
-        memcpy(&(destination->username), source + username_offset, username_size);
-        memcpy(&(destination->email), source + email_offset, email_size);
+        memcpy(destination->username.data(), source + username_offset, COLUMN_USERNAME_SIZE);
+        memcpy(destination->email.data(), source + email_offset, COLUMN_EMAIL_SIZE);
     }
 
     static void print_row(Row* row)
@@ -75,11 +73,17 @@ public:
     }
     ~Table()
     {
-        for (int i = 0; this->pages[i]; i++)
+        for (int i = 0; table_max_pages; i++)
         {
-            delete(this->pages[i]);
+            if ((pages[i]) == nullptr)
+            {
+                break;
+            }   
+            else 
+            {
+                delete[] pages[i];
+            }
         }
-        delete(this);
     }
 
     uint32_t num_rows;
