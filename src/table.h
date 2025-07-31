@@ -13,11 +13,87 @@ constexpr uint32_t COLUMN_EMAIL_SIZE = 256;
 constexpr uint32_t page_size = 4096;
 constexpr uint32_t table_max_pages = 100;
 
-struct Row
+#include <array>
+#include <cstring> // для strncpy
+#include <algorithm> // для std::equal
+
+class Row
 {
+public:
+
+    Row() = default;
+
+    Row(uint32_t id, const std::array<char, COLUMN_USERNAME_SIZE> username, const std::array<char, COLUMN_EMAIL_SIZE> email)
+        : id(id), username(username), email(email) {}
+
+    Row(uint32_t id, const std::string& username, const std::string& email)
+        : id(id)
+    {
+        setUsernameFromString(username);
+        setEmailFromString(email);
+    }
+
+    Row(const Row& other)
+        : id(other.id),
+          username(other.username),
+          email(other.email)
+    {}
+
+    Row& operator=(const Row& other)
+    {
+        if (this != &other)
+        {
+            id = other.id;
+            username = other.username;
+            email = other.email;
+        }
+        return *this;
+    }
+
+    ~Row() = default;
+
+    void setUsernameFromArray(const std::array<char, COLUMN_USERNAME_SIZE> username)
+    {
+        this->username = username;
+        this->username[COLUMN_USERNAME_SIZE - 1] = '\0';
+    }
+
+    void setEmailFromArray(const std::array<char, COLUMN_EMAIL_SIZE> email)
+    {
+         this->email = email;
+         this->email[COLUMN_EMAIL_SIZE - 1] = '\0';
+    }
+
+    void setUsernameFromString(const std::string& value)
+    {
+        strncpy(username.data(), value.c_str(), COLUMN_USERNAME_SIZE - 1);
+        username[COLUMN_USERNAME_SIZE - 1] = '\0';
+    }
+
+    void setEmailFromString(const std::string& value)
+    {
+        strncpy(email.data(), value.c_str(), COLUMN_EMAIL_SIZE - 1);
+        email[COLUMN_EMAIL_SIZE - 1] = '\0';
+    }
+
+    bool operator==(const Row& other) const
+    {
+        return id == other.id &&
+               std::equal(username.begin(), username.end(), other.username.begin()) &&
+               std::equal(email.begin(), email.end(), other.email.begin());
+    }
+
+    bool operator!=(const Row& other) const
+    {
+        return !(*this == other);
+    }
+
     uint32_t id;
     std::array<char, COLUMN_USERNAME_SIZE> username;
     std::array<char, COLUMN_EMAIL_SIZE> email;
+
+private:
+
 };
 
 #define size_of_attribute(Struct, Attribute) sizeof(((Struct*)0)->Attribute);

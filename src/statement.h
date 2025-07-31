@@ -67,8 +67,8 @@ public:
                     return PREPARE_SYNTAX_ERROR;
                 }
                 
-                statement->row_to_insert.username = input_buffer->buffer()[2];
-                statement->row_to_insert.email = input_buffer->buffer()[3];
+                statement->row_to_insert.setEmailFromString(input_buffer->buffer()[2]);
+                statement->row_to_insert.setEmailFromString(input_buffer->buffer()[3]);
 
                 statement->type = STATEMENT_INSERT;
                 return PREPARE_SUCCESS;

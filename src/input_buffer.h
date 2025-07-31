@@ -6,9 +6,6 @@
 #include <cstdlib>
 #include <cstring>
 
-int x = 0;
-
-
 class InputBuffer
 {
 public:
