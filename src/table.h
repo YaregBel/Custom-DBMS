@@ -7,15 +7,14 @@
 #include <iostream>
 #include <array>
 #include <sys/types.h>
+#include <array>
+#include <cstring>
+#include <algorithm>
 
 constexpr uint32_t COLUMN_USERNAME_SIZE = 32;
 constexpr uint32_t COLUMN_EMAIL_SIZE = 256;
 constexpr uint32_t page_size = 4096;
 constexpr uint32_t table_max_pages = 100;
-
-#include <array>
-#include <cstring> // для strncpy
-#include <algorithm> // для std::equal
 
 class Row
 {
