@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 #include "input_buffer.h"
 #include "table.h"
@@ -32,7 +33,9 @@ public:
     // TODO: place to private
     StatementType type;
     Row row_to_insert;
+    int statementLength;
 private:
+
 };
 
 class StatementManipulator
@@ -59,7 +62,7 @@ public:
             {
                 try
                 {
-                    statement->row_to_insert.id = std::stoi(input_buffer->buffer()[1]);
+                    statement->row_to_insert.setStatementId(input_buffer->buffer()[1]);
                 }
                 catch(std::invalid_argument)
                 {
@@ -69,6 +72,8 @@ public:
                 
                 statement->row_to_insert.setUsernameFromString(input_buffer->buffer()[2]);
                 statement->row_to_insert.setEmailFromString(input_buffer->buffer()[3]);
+
+                statement->statementLength = 3;
 
                 statement->type = STATEMENT_INSERT;
                 return PREPARE_SUCCESS;
@@ -81,6 +86,7 @@ public:
         }
         if (input_buffer->buffer()[0] == "select") {
             statement->type = STATEMENT_SELECT;
+            statement->statementLength = 1;
             return PREPARE_SUCCESS;
         }
 
@@ -98,18 +104,38 @@ public:
         }  
     }
 
+    static bool checkStatementLength(Statement* statement, int requiredLength)
+    {
+        if (statement->statementLength == requiredLength)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     static ExecuteResult execute_insert(Statement* statement, Table* table)
     {
-        if (table->num_rows >= table_max_rows)
+        if (checkStatementLength(statement, 3))
         {
-            return EXECUTE_TABLE_FULL;
+            if (table->num_rows >= table_max_rows)
+            {
+                return EXECUTE_TABLE_FULL;
+            }
+            
+            Row* row_to_insert = &(statement->row_to_insert);
+            RowManipulator::serialize_row(row_to_insert, TableManipulator::row_slot(table, table->num_rows));
+            table->num_rows += 1;
+            
+            // TODO: В методе не хватает проверки на успешность выполнения запроса
+            return EXECUTE_SUCCESS;
         }
-        
-        Row* row_to_insert = &(statement->row_to_insert);
-        RowManipulator::serialize_row(row_to_insert, TableManipulator::row_slot(table, table->num_rows));
-        table->num_rows += 1;
-        
-        return EXECUTE_SUCCESS;
+        else 
+        {
+            return EXECUTE_ERROR;
+        }
     }
 
     static ExecuteResult execute_select(Statement* statement, Table* table)

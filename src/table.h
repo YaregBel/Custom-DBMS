@@ -51,6 +51,11 @@ public:
 
     ~Row() = default;
 
+    void setStatementId(const std::string idStr)
+    {
+        this->id = std::stoi(idStr);
+    }
+
     void setUsernameFromArray(const std::array<char, COLUMN_USERNAME_SIZE> username)
     {
         this->username = username;
