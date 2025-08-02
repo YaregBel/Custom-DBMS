@@ -50,47 +50,88 @@ public:
         }
     }
 
-    static PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement) 
+    static PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement)
     {
-        if (input_buffer->buffer()[0] == "insert") 
-        {    
-            std::cout << "Debug: Input buffer = '" << input_buffer->buffer()[0] << "'\n";
-            
-            int args_assigned = input_buffer->size();
-            
-            if (args_assigned == 4)
-            {
-                try
-                {
-                    statement->row_to_insert.setStatementId(input_buffer->buffer()[1]);
-                }
-                catch(std::invalid_argument)
-                {
-                    std::cout << "Invalid ID format.\n";
-                    return PREPARE_SYNTAX_ERROR;
-                }
-                
-                statement->row_to_insert.setUsernameFromString(input_buffer->buffer()[2]);
-                statement->row_to_insert.setEmailFromString(input_buffer->buffer()[3]);
+        bool commandExistance = isCommandExist(input_buffer);
+        if (commandExistance)
+        {
+            PrepareResult result = fillStatement(input_buffer, statement);
 
-                statement->statementLength = 3;
+            return result;
+        }
 
-                statement->type = STATEMENT_INSERT;
-                return PREPARE_SUCCESS;
-            }
-            else 
+        return PREPARE_UNRECOGNIZED_STATEMENT;
+    }
+
+    static bool isCommandExist(InputBuffer* input_buffer)
+    {
+        std::vector<std::string> sqlCommands{"insert", "select"};
+        for (auto sqlCommand : sqlCommands)
+        {
+            if (input_buffer->buffer()[0] == sqlCommand)
             {
-                std::cout << "Error: you should use 3 arguments\n";
-                return PREPARE_SYNTAX_ERROR;
+                return true;
             }
         }
-        if (input_buffer->buffer()[0] == "select") {
-            statement->type = STATEMENT_SELECT;
-            statement->statementLength = 1;
+        return false;
+    }
+
+    static PrepareResult fillStatement(InputBuffer* input_buffer, Statement* statement)
+    {
+        std::string sqlCommand = input_buffer->buffer()[0];
+        if (sqlCommand == "insert")
+        {
+            int args_assigned = input_buffer->size();
+                
+            if (args_assigned == 4)
+            {
+                if (!isIdValid(input_buffer, statement))
+                {
+                    return PREPARE_SYNTAX_ERROR;
+                }
+
+                fillInsertStatement(input_buffer, statement);
+
+                return PREPARE_SUCCESS;
+            }
+        }
+        else if (sqlCommand == "select")
+        {
+            fillSelectStatement(input_buffer, statement);
+            
             return PREPARE_SUCCESS;
         }
 
         return PREPARE_UNRECOGNIZED_STATEMENT;
+    }
+
+    static bool isIdValid(InputBuffer* input_buffer, Statement* statement)
+    {
+        try
+        {
+            statement->row_to_insert.setStatementId(input_buffer->buffer()[1]);
+            return true;
+        }
+        catch(std::invalid_argument)
+        {
+            std::cout << "Invalid ID format.\n";
+            return false;
+        }
+    }
+
+    static void fillInsertStatement(InputBuffer* input_buffer, Statement* statement)
+    {
+        statement->row_to_insert.setUsernameFromString(input_buffer->buffer()[2]);
+        statement->row_to_insert.setEmailFromString(input_buffer->buffer()[3]);
+
+        statement->statementLength = 3;
+        statement->type = STATEMENT_INSERT;
+    }
+
+    static void fillSelectStatement(InputBuffer* input_buffer, Statement* statement)
+    {
+        statement->type = STATEMENT_SELECT;
+        statement->statementLength = 1;
     }
 
     static ExecuteResult execute_statement(Statement* statement, Table *table)
@@ -102,6 +143,8 @@ public:
             case(STATEMENT_SELECT):
                 return execute_select(statement, table);
         }  
+
+        return EXECUTE_ERROR;
     }
 
     static bool checkStatementLength(Statement* statement, int requiredLength)
