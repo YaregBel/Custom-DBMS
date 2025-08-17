@@ -7,30 +7,67 @@
 
 #define CATCH_CONFIG_MAIN
 
-TEST_CASE( "vectors can be sized and resized", "[vector]" ) 
+TEST_CASE( "check if \".exit\" work", "[.exit]" ) 
 {
     Table* table = new Table();
     InputBuffer* input_buffer = new InputBuffer();
 
-    SECTION( "Statement .exit must processed correctly" ) 
-    {
-        std::vector<std::string> exitCom = {".exit"};
-        input_buffer->set_buffer(exitCom);
-        REQUIRE(input_buffer->buffer() == exitCom);
-    }
+    std::vector<std::string> exitCom = {".exit"};
+    input_buffer->set_buffer(exitCom);
+    REQUIRE(input_buffer->buffer() == exitCom);
+}
 
-    SECTION( "Statement insert should work correctly" ) 
-    {
-        Statement statement;
+TEST_CASE( "check \"insert\" works", "[insert]" ) 
+{
+    Table* table = new Table();
+    InputBuffer* input_buffer = new InputBuffer();
 
+    Statement statement;
+
+    SECTION( "Insert command with correct input. [Positive]" ) 
+    {
         input_buffer->set_buffer({"insert", "1", "yareg", "yareg@gmail.com"});
+
         REQUIRE( StatementManipulator::prepare_statement(input_buffer, 
             &statement) == PREPARE_SUCCESS );
         REQUIRE( StatementManipulator::execute_statement(&statement, 
             table) == EXECUTE_SUCCESS);
-            
+    }
+
+    SECTION( "Insert command with correct input. [Positive]" ) 
+    {
+        input_buffer->set_buffer({"insert", "1", "yareg", "yareg@gmail.com"});
+        
+        REQUIRE( StatementManipulator::prepare_statement(input_buffer, 
+            &statement) == PREPARE_SUCCESS );
+        REQUIRE( StatementManipulator::execute_statement(&statement, 
+            table) == EXECUTE_SUCCESS);
+    }
+
+    SECTION( "Insert command with incorrect input. [Negative]" ) 
+    {
         input_buffer->set_buffer({"insert", "1", "yareg"});
         REQUIRE( StatementManipulator::prepare_statement(input_buffer, 
+            &statement) == PREPARE_UNRECOGNIZED_STATEMENT );
+    }
+
+        SECTION( "Insert command with incorrect ID format. [Negative]" ) 
+    {
+        input_buffer->set_buffer({"insert", "a", "yareg", "yareg@gmail.com"});
+        
+        REQUIRE( StatementManipulator::prepare_statement(input_buffer, 
             &statement) == PREPARE_SYNTAX_ERROR );
+        REQUIRE( StatementManipulator::execute_statement(&statement, 
+            table) == EXECUTE_ERROR);
+    }
+
+        SECTION( "Insert command with excessive username length. [Negative]" ) 
+    {
+        input_buffer->set_buffer({"insert", "1", "yaregyaregyaregyaregyaregyaregyaregyareg", "yareg@gmail.com"});
+        
+        REQUIRE( StatementManipulator::prepare_statement(input_buffer, 
+            &statement) == PREPARE_SYNTAX_ERROR );
+        REQUIRE( StatementManipulator::execute_statement(&statement, 
+            table) == EXECUTE_ERROR);
     }
 }
