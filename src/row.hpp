@@ -65,12 +65,22 @@ public:
 
     void setUsernameFromString(const std::string& value)
     {
+        if (value.size() > COLUMN_USERNAME_SIZE - 1)
+        {
+            throw std::string{"The username size is bigger than 32."};
+        }
+
         strncpy(username.data(), value.c_str(), COLUMN_USERNAME_SIZE - 1);
         username[COLUMN_USERNAME_SIZE - 1] = '\0';
     }
 
     void setEmailFromString(const std::string& value)
     {
+        if (value.size() > COLUMN_EMAIL_SIZE - 1)
+        {
+            throw std::string{"The email size is bigger than 256."};
+        }
+
         strncpy(email.data(), value.c_str(), COLUMN_EMAIL_SIZE - 1);
         email[COLUMN_EMAIL_SIZE - 1] = '\0';
     }

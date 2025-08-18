@@ -43,7 +43,7 @@ TEST_CASE( "check \"insert\" works", "[insert]" )
         REQUIRE( StatementManipulator::execute_statement(&statement, 
             table) == EXECUTE_SUCCESS);
     }
-
+ 
     SECTION( "Insert command with incorrect input. [Negative]" ) 
     {
         input_buffer->set_buffer({"insert", "1", "yareg"});
