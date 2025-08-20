@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <thread>
 
-#include "../statement.h"
+#include "../statement.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 #define CATCH_CONFIG_MAIN
@@ -70,4 +70,26 @@ TEST_CASE( "check \"insert\" works", "[insert]" )
         REQUIRE( StatementManipulator::execute_statement(&statement, 
             table) == EXECUTE_ERROR);
     }
+}
+
+TEST_CASE("Incorrect or inexisting statement.")
+{
+    InputBuffer* input_buffer = new InputBuffer();
+
+    Statement statement;
+    input_buffer->set_buffer({"pimpim-patapim", "1", "yareg", "yareg@gmail.com"});
+
+    REQUIRE( StatementManipulator::prepare_statement(input_buffer, 
+        &statement) == PREPARE_UNRECOGNIZED_STATEMENT );
+}
+
+TEST_CASE("Incorrect or inexisting dot-statement.")
+{
+    InputBuffer* input_buffer = new InputBuffer();
+
+    Statement statement;
+    input_buffer->set_buffer({".hahaha", "1", "yareg", "yareg@gmail.com"});
+
+    REQUIRE( StatementManipulator::prepare_statement(input_buffer, 
+        &statement) == PREPARE_UNRECOGNIZED_STATEMENT);
 }

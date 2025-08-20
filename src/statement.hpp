@@ -2,8 +2,8 @@
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
-#include "input_buffer.h"
-#include "table.h"
+#include "input_buffer.hpp"
+#include "table.hpp"
 
 typedef enum {
     META_COMMAND_SUCCESS,
