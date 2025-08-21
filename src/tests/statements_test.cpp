@@ -9,7 +9,7 @@
 
 TEST_CASE( "check if \".exit\" work", "[.exit]" ) 
 {
-    Table* table = new Table();
+    Table* table = new Table("test.db");
     InputBuffer* input_buffer = new InputBuffer();
 
     std::vector<std::string> exitCom = {".exit"};
@@ -19,7 +19,7 @@ TEST_CASE( "check if \".exit\" work", "[.exit]" )
 
 TEST_CASE( "check \"insert\" works", "[insert]" ) 
 {
-    Table* table = new Table();
+    Table* table = new Table("test.db");
     InputBuffer* input_buffer = new InputBuffer();
 
     Statement statement;

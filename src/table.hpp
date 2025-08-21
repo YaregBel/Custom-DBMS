@@ -1,4 +1,5 @@
 #include <atomic>
+#include <cerrno>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -14,6 +15,8 @@
 #include <cstring>
 #include <algorithm>
 #include <filesystem>
+#include <fcntl.h>
+#include <unistd.h>
 #include "row.hpp"
 
 
@@ -27,60 +30,93 @@ constexpr uint32_t table_max_rows = rows_per_page * table_max_pages;
 class Pager
 {
 public:
-    Pager(const std::string& inputFileName, const uint32_t table_pages = table_max_pages)
+    Pager(const std::string& inputFileName, const uint32_t table_pages = table_max_pages): num_rows(0)
     {
         this->filename = inputFileName;
+        int file_descriptor = open(inputFileName.c_str(),  O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 
-        std::fstream file(inputFileName);
-
-        if (file.is_open())
+        if (file_descriptor == -1)
         {
-            this->fileLength = std::filesystem::file_size(inputFileName);
-
-            this->num_rows = num_rows;
-            for (int i = 0; i < table_pages; i++)
-            {
-                this->pages[i] = NULL;
-            }
-
-        }
-        else 
-        {
-            std::cout << "Unable to open file\n";
+            std::cout << "can't create file\n";
             exit(EXIT_FAILURE);
+        }
+
+        off_t file_length = lseek(file_descriptor, 0, SEEK_END);
+
+        this->file_descriptor = file_descriptor;
+        this->file_length = lseek(file_descriptor, 0, SEEK_END);
+
+        this->num_rows = num_rows;
+        for (uint32_t i = 0; i < table_pages; i++)
+        {
+            this->pages[i] = nullptr;
         }
     };
 
-    ~Pager() = default;
+    ~Pager()
+    {
+        if (this->file_descriptor != -1)
+        {
+            close(file_descriptor);
+        }
+
+        for (auto& page : pages)
+        {
+            if (page != nullptr)
+            {
+                delete[] page;
+            }
+        }
+    }
 
     uint32_t getFileLength()
     {
-        return this->fileLength;
+        return this->file_length;
     }
 
-    void set_page(uint32_t pageInd)
+    void set_page(uint32_t page_ind)
     {
         try {
-            pages.at(pageInd) = new std::byte[page_size];
+            pages.at(page_ind) = new std::byte[page_size];
         } 
         catch (std::out_of_range& exception) 
         {
-            std::cout << "The page at " << pageInd << " doesn't exist!" << std::endl;
+            std::cout << "The page at " << page_ind << " doesn't exist!" << std::endl;
             std::cout << "Pages haven't been set!";
         }
     }
 
-    std::byte* get_page(uint32_t pageInd)
+    std::byte* get_page(uint32_t page_ind)
     {
         try 
         {
-            return pages.at(pageInd);
+            if (pages[page_ind] == nullptr)
+            {
+                pages[page_ind] = new std::byte[page_size];
+
+                uint32_t offset = page_ind * page_size;
+
+                if (file_length >= offset + page_size)
+                {
+                    lseek(this->file_descriptor, offset, SEEK_SET);
+                    ssize_t bytes_read = read(this->file_descriptor, pages[page_ind], page_size);
+
+                    if (bytes_read == -1)
+                    {
+                        std::cout << "Error reading file: " << errno << std::endl;
+
+                        // TODO: rework not ot exit, but return nullptr and prevent memory leak.
+                        exit(EXIT_FAILURE);
+                    }
+                }
+            }
+
+            return pages.at(page_ind);
         } 
         catch (std::out_of_range& exception) 
         {
-            std::cout << "The page at " << pageInd << " doesn't exist!" << std::endl;
-            std::cout << "Return first page instead!";
-            return pages[pageInd];
+            std::cout << "The page at " << page_ind << " is out of bounds!" << std::endl;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -91,8 +127,8 @@ public:
 
 private:
     std::string filename;
-    int fileDescriptor;
-    uint32_t fileLength;
+    int file_descriptor;
+    uint32_t file_length;
 
     uint32_t num_rows;
     std::array<std::byte*, table_max_pages> pages;
@@ -101,10 +137,10 @@ private:
 
 class Table {
 public:
-    Table(const uint32_t table_pages = table_max_pages, const std::string filename = "")
+    Table(const std::string filename = "", const uint32_t table_pages = table_max_pages)
     {
-        Pager* pager = new Pager(filename);
-        uint32_t num_rows = pager->getFileLength() / row_size;
+        this->pager = new Pager(filename);
+        this->num_rows = pager->getFileLength() / row_size;
 
 
         // this->num_rows = num_rows;

@@ -59,7 +59,7 @@ void executeStatement(Statement* statement, Table* table) {
 
 int main(int argc, char* argv[])
 {
-    Table* table = new Table();
+    Table* table = new Table("database_name.db");
     InputBuffer* input_buffer = new InputBuffer();
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
