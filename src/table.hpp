@@ -1,20 +1,14 @@
-#include <atomic>
 #include <cerrno>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
-#include <fstream>
 #include <iostream>
 #include <array>
 #include <stdexcept>
 #include <string>
 #include <sys/types.h>
 #include <array>
-#include <cstring>
-#include <algorithm>
-#include <filesystem>
 #include <fcntl.h>
 #include <unistd.h>
 #include "row.hpp"
@@ -30,7 +24,7 @@ constexpr uint32_t table_max_rows = rows_per_page * table_max_pages;
 class Pager
 {
 public:
-    Pager(const std::string& inputFileName, const uint32_t table_pages = table_max_pages): num_rows(0)
+    Pager(const std::string& inputFileName, const uint32_t table_pages = table_max_pages, const uint32_t num_rows = 0)
     {
         this->filename = inputFileName;
         int file_descriptor = open(inputFileName.c_str(),  O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
@@ -69,15 +63,10 @@ public:
         }
     }
 
-    uint32_t getFileLength()
-    {
-        return this->file_length;
-    }
-
-    void set_page(uint32_t page_ind)
+    void set_page(const uint32_t page_ind, std::byte* content = nullptr)
     {
         try {
-            pages.at(page_ind) = new std::byte[page_size];
+            pages.at(page_ind) = content;
         } 
         catch (std::out_of_range& exception) 
         {
@@ -86,7 +75,17 @@ public:
         }
     }
 
-    std::byte* get_page(uint32_t page_ind)
+    uint32_t getFileLength()
+    {
+        return this->file_length;
+    }
+
+    uint32_t get_file_descriptor()
+    {
+        return this->file_descriptor;
+    }
+
+    std::byte* get_page(const uint32_t page_ind)
     {
         try 
         {

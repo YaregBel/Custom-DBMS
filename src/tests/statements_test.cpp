@@ -1,7 +1,3 @@
-#include <chrono>
-#include <cstddef>
-#include <thread>
-
 #include "../statement.hpp"
 #include <catch2/catch_test_macros.hpp>
 

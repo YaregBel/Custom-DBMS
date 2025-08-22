@@ -1,9 +1,8 @@
 #include <cstdint>
 #include <iostream>
-#include <iterator>
 #include <stdexcept>
 #include "input_buffer.hpp"
-#include "table.hpp"
+#include "db_manipulator.hpp"
 
 typedef enum {
     META_COMMAND_SUCCESS,
@@ -41,9 +40,10 @@ private:
 class StatementManipulator
 {
 public:
-    static MetaCommandResult do_meta_command(InputBuffer* input_buffer) 
+    static MetaCommandResult do_meta_command(InputBuffer* input_buffer, Table* table) 
     {
         if (input_buffer->buffer()[0] == ".exit") {
+            DB_Handler::db_close(table);
             exit(EXIT_SUCCESS);
         } else {
             return META_COMMAND_UNRECOGNIZED_COMMAND;

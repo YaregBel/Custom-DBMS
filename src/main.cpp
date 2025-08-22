@@ -8,11 +8,11 @@ void print_promt()
     std::cout << "db > ";
 };
 
-bool isMetaCommand(InputBuffer* input_buffer) 
+bool isMetaCommand(InputBuffer* input_buffer, Table* table) 
 {
     if (input_buffer->buffer()[0][0] == '.') 
     {
-        switch(StatementManipulator::do_meta_command(input_buffer)) 
+        switch(StatementManipulator::do_meta_command(input_buffer, table)) 
         {
             case META_COMMAND_SUCCESS:
                 return true;
@@ -59,7 +59,14 @@ void executeStatement(Statement* statement, Table* table) {
 
 int main(int argc, char* argv[])
 {
-    Table* table = new Table("database_name.db");
+    if (argc < 2) {
+        std::cout << "Must supply a database filename.\n";
+        exit(EXIT_FAILURE);
+    }
+
+    std::string filename = argv[1];
+    Table* table = DB_Handler::db_open(filename);
+
     InputBuffer* input_buffer = new InputBuffer();
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -68,7 +75,7 @@ int main(int argc, char* argv[])
         print_promt();
         InputManipulator::read_input(input_buffer);
 
-        if(isMetaCommand(input_buffer)) 
+        if(isMetaCommand(input_buffer, table)) 
         {
             continue;
         }
