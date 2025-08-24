@@ -11,6 +11,21 @@
 constexpr uint32_t COLUMN_USERNAME_SIZE = 32;
 constexpr uint32_t COLUMN_EMAIL_SIZE = 256;
 
+template <size_t N>
+void assign_with_padding(std::array<char, N>& target, std::string_view value)
+{
+    target.fill('\0');
+    std::memcpy(target.data(), value.data(), std::min(value.size(), N - 1));
+}
+
+template <size_t N>
+void assign_with_padding(std::array<char, N>& target, const std::array<char, N>& source)
+{
+    target.fill('\0');
+    auto len = strnlen(source.data(), N);  // копируем только до '\0'
+    std::memcpy(target.data(), source.data(), len);
+}
+
 class Row
 {
 public:
@@ -18,7 +33,11 @@ public:
     Row() = default;
 
     Row(uint32_t id, const std::array<char, COLUMN_USERNAME_SIZE> username, const std::array<char, COLUMN_EMAIL_SIZE> email)
-        : id(id), username(username), email(email) {}
+        : id(id)
+        {
+            assign_with_padding(this->username, username);
+            assign_with_padding(this->email, email);
+        }
 
     Row(uint32_t id, const std::string& username, const std::string& email)
         : id(id)
@@ -53,14 +72,13 @@ public:
 
     void setUsernameFromArray(const std::array<char, COLUMN_USERNAME_SIZE> username)
     {
-        this->username = username;
-        this->username[COLUMN_USERNAME_SIZE - 1] = '\0';
+        assign_with_padding(this->username, username);
+
     }
 
     void setEmailFromArray(const std::array<char, COLUMN_EMAIL_SIZE> email)
     {
-         this->email = email;
-         this->email[COLUMN_EMAIL_SIZE - 1] = '\0';
+        assign_with_padding(this->username, username);
     }
 
     void setUsernameFromString(const std::string& value)
@@ -70,8 +88,7 @@ public:
             throw std::string{"The username size is bigger than 32."};
         }
 
-        strncpy(username.data(), value.c_str(), COLUMN_USERNAME_SIZE - 1);
-        username[COLUMN_USERNAME_SIZE - 1] = '\0';
+        assign_with_padding(username, value);
     }
 
     void setEmailFromString(const std::string& value)
@@ -81,8 +98,7 @@ public:
             throw std::string{"The email size is bigger than 256."};
         }
 
-        strncpy(email.data(), value.c_str(), COLUMN_EMAIL_SIZE - 1);
-        email[COLUMN_EMAIL_SIZE - 1] = '\0';
+        assign_with_padding(username, value);
     }
 
     bool operator==(const Row& other) const
