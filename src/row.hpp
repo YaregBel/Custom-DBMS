@@ -78,7 +78,7 @@ public:
 
     void setEmailFromArray(const std::array<char, COLUMN_EMAIL_SIZE> email)
     {
-        assign_with_padding(this->username, username);
+        assign_with_padding(this->email, email);
     }
 
     void setUsernameFromString(const std::string& value)
@@ -98,7 +98,7 @@ public:
             throw std::string{"The email size is bigger than 256."};
         }
 
-        assign_with_padding(username, value);
+        assign_with_padding(email, value);
     }
 
     bool operator==(const Row& other) const

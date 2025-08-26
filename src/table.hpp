@@ -131,7 +131,6 @@ private:
 
     uint32_t num_rows;
     std::array<std::byte*, table_max_pages> pages;
-
 };
 
 class Table {
@@ -140,31 +139,9 @@ public:
     {
         this->pager = new Pager(filename);
         this->num_rows = pager->getFileLength() / row_size;
-
-
-        // this->num_rows = num_rows;
-        // for (int i = 0; i < table_pages; i++)
-        // {
-        //     this->pages[i] = NULL;
-        // }
     }
-    // ~Table()
-    // {
-    //     for (int i = 0; table_max_pages; i++)
-    //     {
-    //         if ((pages[i]) == nullptr)
-    //         {
-    //             break;
-    //         }   
-    //         else 
-    //         {
-    //             delete[] pages[i];
-    //         }
-    //     }
-    // }
 
     uint32_t num_rows;
-    //std::byte* pages[table_max_pages];
     Pager* pager;
 };
 

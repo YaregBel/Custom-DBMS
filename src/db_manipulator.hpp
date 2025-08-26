@@ -78,12 +78,13 @@ public:
 
         off_t offset = lseek(pager->get_file_descriptor(), page_ind * page_size, SEEK_SET);
 
-        if (offset)
+        if (offset == -1)
         {
             std::cout << "Error seeking: " << errno << std::endl; 
             exit(EXIT_FAILURE);
         }
 
+        // Returns: 4096
         ssize_t bytes_written = write(pager->get_file_descriptor(), pager->get_page(page_ind), size);
         
         if (bytes_written == -1)
