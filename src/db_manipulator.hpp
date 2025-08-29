@@ -29,7 +29,7 @@ public:
             }
 
             pager_flush(pager, page_ind, page_size);
-            delete(pager->get_page(page_ind));
+            delete[] pager->get_page(page_ind);
             pager->set_page(page_ind, nullptr);
         }
 
@@ -42,7 +42,7 @@ public:
             if (pager->get_page(page_num) != nullptr)
             {
                 pager_flush(pager, page_num, num_additional_rows * row_size);
-                delete(pager->get_page(page_num));
+                delete[] pager->get_page(page_num);
                 pager->set_page(page_num, nullptr);
             }
         }
@@ -58,7 +58,7 @@ public:
             std::byte* page = pager->get_page(page_ind);
             if (page)
             {
-                delete(page);
+                delete[] page;
                 pager->set_page(page_ind, nullptr);
             }
         }

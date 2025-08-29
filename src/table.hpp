@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <array>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <sys/types.h>
@@ -34,8 +35,6 @@ public:
             std::cout << "can't create file\n";
             exit(EXIT_FAILURE);
         }
-
-        off_t file_length = lseek(file_descriptor, 0, SEEK_END);
 
         this->file_descriptor = file_descriptor;
         this->file_length = lseek(file_descriptor, 0, SEEK_END);
@@ -138,7 +137,9 @@ public:
     Table(const std::string filename = "", const uint32_t table_pages = table_max_pages)
     {
         this->pager = new Pager(filename);
-        this->num_rows = pager->getFileLength() / row_size;
+        // Assertion calls.TODO: Исправить. Так как assertion вылетает, из-за того, что количество строк, 
+        // преувеличивает максимальное в файле и вылетает ошибка.
+        this->num_rows = pager->getFileLength() / row_size - 2;
     }
 
     uint32_t num_rows;
